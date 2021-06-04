@@ -4,8 +4,9 @@ import { scrapeWebsite } from '../../../scraper';
 require('dotenv').config();
 
 const ideaRouter = Router();
-const url = '22tojepqmpah32fkeuurutki7o5bmb45uhmgzdg4l2tk34fkdafgt7id.onion';
-scrapeWebsite({ url, withProxy: true, headless: false });
+const url =
+  'http://22tojepqmpah32fkeuurutki7o5bmb45uhmgzdg4l2tk34fkdafgt7id.onion/';
+scrapeWebsite({ url, withProxy: true, headless: true });
 ideaRouter.get('/all', (req: Request, res: Response) => {});
 
 ideaRouter.post('/create', (req: Request, res: Response) => {});
