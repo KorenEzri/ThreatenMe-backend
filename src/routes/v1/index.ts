@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { checkToken } from '../../middelwares/checkToken';
 import authRouter from './auth';
-import ideaRouter from './idea';
+import onionRouter from './onion';
 
 const router = Router();
 
@@ -10,7 +10,7 @@ const unknownEndpoint = (req: Request, res: Response) => {
 };
 
 router.use(authRouter);
-router.use('/idea', ideaRouter);
+router.use('/onion', onionRouter);
 router.use(checkToken);
 
 router.use(unknownEndpoint);

@@ -1,4 +1,9 @@
-import puppeteer from 'puppeteer';
+import {
+  startBrowser,
+  scrapeAll,
+  getHrefs,
+  generalScrape,
+} from './scrape.util';
 export interface Options {
   headless?: boolean;
   url?: string;
@@ -6,46 +11,33 @@ export interface Options {
   search_params?: string;
   withProxy?: boolean;
   proxyUrl?: string;
+  return_data?: string[];
+  data: {
+    selector: string;
+    attribute?: string;
+  };
 }
-const startBrowser = async (
-  headless: boolean,
-  withProxy: boolean,
-  proxyUrl?: string,
-) => {
-  let browser;
-  const defaultProxyUrl = '9050';
-  const runWithProxy = [
-    `--proxy-server=socks5://127.0.0.1:${proxyUrl || defaultProxyUrl}`,
-    '--disable-setuid-sandbox',
-  ];
-  let args: string[] = [];
-  if (withProxy) args = args.concat(runWithProxy);
-  try {
-    console.log('Opening the browser......');
-    browser = await puppeteer.launch({
-      headless: headless,
-      args,
-      ignoreHTTPSErrors: true,
-    });
-  } catch (err) {
-    console.log('Could not create a browser instance => : ', err);
-  }
-  return browser;
-};
-const scrapeAll = async (
-  scraperObject: { scraper: (arg0: any) => any },
-  browserInstance: any,
-) => {
-  let browser;
-  try {
-    browser = await browserInstance;
-    await scraperObject.scraper(browser);
-  } catch (err) {
-    console.log('Could not resolve the browser instance => ', err);
+const switchResponse = async (pageInstance: any, selector: string) => {
+  switch (selector) {
+    case 'a':
+      const hrefRes = await getHrefs('a', pageInstance);
+      return hrefRes;
+    default:
+      const response = await generalScrape(selector, pageInstance);
+      return response;
+      break;
   }
 };
 export const scrapeWebsite = async (options: Options) => {
-  let { headless, url, keyword, search_params, withProxy, proxyUrl } = options;
+  let {
+    headless,
+    url,
+    keyword,
+    search_params,
+    withProxy,
+    proxyUrl,
+    data: { selector, attribute },
+  } = options;
   if (!withProxy) withProxy = false;
   if (headless === undefined) headless = true;
   const browserInstance = await startBrowser(headless, withProxy, proxyUrl);
@@ -55,11 +47,11 @@ export const scrapeWebsite = async (options: Options) => {
       let page = await browser.newPage();
       console.log(`Navigating to ${this.url}...`);
       await page.goto(this.url);
-      setTimeout(async () => {
-        await page.close();
-        console.log('Page closed.');
-      }, 2000);
+      const response = await switchResponse(page, selector);
+      await page.close();
+      console.log('Page closed.');
+      return response;
     },
   };
-  await scrapeAll(scraperObject, browserInstance);
+  return await scrapeAll(scraperObject, browserInstance);
 };
