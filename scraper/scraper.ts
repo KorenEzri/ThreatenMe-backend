@@ -17,13 +17,17 @@ export interface Options {
     attribute?: string;
   };
 }
-const switchResponse = async (pageInstance: any, selector: string) => {
+const switchResponse = async (
+  pageInstance: any,
+  selector: string,
+  attribute?: string,
+) => {
   switch (selector) {
     case 'a':
       const hrefRes = await getHrefs('a', pageInstance);
       return hrefRes;
     default:
-      const response = await generalScrape(selector, pageInstance);
+      const response = await generalScrape(selector, pageInstance, attribute);
       return response;
       break;
   }
@@ -46,8 +50,8 @@ export const scrapeWebsite = async (options: Options) => {
     async scraper(browser: { newPage: () => any }) {
       let page = await browser.newPage();
       console.log(`Navigating to ${this.url}...`);
-      await page.goto(this.url);
-      const response = await switchResponse(page, selector);
+      await page.goto(this.url, { waitUntil: 'networkidle2', timeout: 0 });
+      const response = await switchResponse(page, selector, attribute);
       await page.close();
       console.log('Page closed.');
       return response;

@@ -1,13 +1,17 @@
 import { Router, Response, Request } from 'express';
 import * as onions from '../../utils/onion.util';
+import * as pastes from '../../utils/pastes.util';
 
 require('dotenv').config();
 
 const onionRouter = Router();
 onionRouter.get('/', async (req: Request, res: Response) => {
-  console.log(
-    await onions.scrapWebsite('http://nzxj65x32vh2fkhk.onion/all', 'div'),
+  const scrapedData = await pastes.SortPastes(
+    'http://paste6kr6ttc5chv.onion/top.php',
+    'textarea.boxes',
+    'textContent',
   );
+  res.status(200).send(scrapedData);
 });
 onionRouter.get('/allurls', async (req: Request, res: Response) => {
   try {

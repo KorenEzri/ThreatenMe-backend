@@ -47,9 +47,13 @@ export const generalScrape = async (
   pageInstance: any,
   attribute?: string,
 ) => {
-  if (attribute) {
+  if (attribute === 'textContent') {
     return await pageInstance.$$eval(selector, (as: any[]) =>
-      as.map((a: any) => a?.getAttribute(attribute)),
+      as.map((a: any) => a.textContent),
+    );
+  } else if (attribute) {
+    return await pageInstance.$$eval(selector, (as: any[]) =>
+      as.map((a: any) => a.getAttribute(attribute)),
     );
   } else {
     return await pageInstance.$$eval(selector, (as: any[]) =>

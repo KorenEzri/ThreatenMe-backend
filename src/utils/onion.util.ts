@@ -91,9 +91,9 @@ export const scrapWebsite = async (
 ) => {
   const options = {
     url: url,
-    headless: false,
+    withProxy: true,
+    headless: true,
     data: { selector: selector, attribute: attribute },
   };
-  console.log(options);
   return await scrapeWebsite(options);
 };
