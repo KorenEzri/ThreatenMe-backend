@@ -5,12 +5,30 @@ import * as pastes from '../../utils/pastes.util';
 require('dotenv').config();
 
 const onionRouter = Router();
-onionRouter.get('/', async (req: Request, res: Response) => {
+onionRouter.get('/deeppaste', async (req: Request, res: Response) => {
   const scrapedData = await pastes.SortPastes(
     'http://paste6kr6ttc5chv.onion/top.php',
     'textarea.boxes',
     'textContent',
   );
+  res.status(200).send(scrapedData);
+});
+onionRouter.get('/stronghold', async (req: Request, res: Response) => {
+  const strongholdUrls = [
+    'http://nzxj65x32vh2fkhk.onion/all',
+    'http://nzxj65x32vh2fkhk.onion/all?page=2',
+    'http://nzxj65x32vh2fkhk.onion/all?page=3',
+  ];
+  const scrapedData = await Promise.all(
+    strongholdUrls.map(async (url: string) => {
+      return await pastes.SortPastesWithoutLinks(
+        url,
+        'div.text',
+        'textContent',
+      );
+    }),
+  );
+
   res.status(200).send(scrapedData);
 });
 onionRouter.get('/allurls', async (req: Request, res: Response) => {
