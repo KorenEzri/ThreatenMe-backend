@@ -60,6 +60,10 @@ export const generalScrape = async (
     return await pageInstance.$$eval(selector, (as: any[]) =>
       as.map((a: any) => a.textContent),
     );
+  } else if (attribute === 'innerText') {
+    return await pageInstance.$$eval(selector, (as: any[]) =>
+      as.map((a: any) => a.innerText),
+    );
   } else if (attribute) {
     return await pageInstance.$$eval(selector, (as: any[]) =>
       as.map((a: any) => a.getAttribute(attribute)),

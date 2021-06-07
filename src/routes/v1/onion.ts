@@ -1,4 +1,5 @@
 import { Router, Response, Request } from 'express';
+import { ParseInnerText } from '../../utils';
 import * as onions from '../../utils/onion.util';
 import * as pastes from '../../utils/pastes.util';
 
@@ -8,8 +9,8 @@ const onionRouter = Router();
 onionRouter.get('/deeppaste', async (req: Request, res: Response) => {
   const scrapedData = await pastes.SortPastes(
     'http://paste6kr6ttc5chv.onion/top.php',
-    'textarea.boxes',
-    'textContent',
+    'body',
+    'innerText',
   );
   res.status(200).send(scrapedData);
 });
@@ -21,14 +22,23 @@ onionRouter.get('/stronghold', async (req: Request, res: Response) => {
   ];
   const scrapedData = await Promise.all(
     strongholdUrls.map(async (url: string) => {
-      return await pastes.SortPastesWithoutLinks(
+      const data = await pastes.SortPastesWithoutLinks(
         url,
-        'div.text',
-        'textContent',
+        'div.row',
+        'innerText',
       );
+      try {
+        return data.map((paste: string) => {
+          if (paste.split(' ').length > 2) {
+            return ParseInnerText(paste);
+          }
+        });
+      } catch ({ message }) {
+        console.log(message);
+        return data;
+      }
     }),
   );
-
   res.status(200).send(scrapedData);
 });
 onionRouter.get('/allurls', async (req: Request, res: Response) => {
