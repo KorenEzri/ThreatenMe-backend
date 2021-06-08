@@ -1,5 +1,8 @@
 import * as onions from '../utils/onion.util';
-export const SortPastes = async (
+import { IPaste } from '../../types';
+import { Pastes } from '../db/schemas';
+
+export const getPastes = async (
   pasteSiteLink: string,
   selector: string,
   attribute?: string,
@@ -12,10 +15,44 @@ export const SortPastes = async (
     }),
   );
 };
-export const SortPastesWithoutLinks = async (
+export const getPastesWithoutLinks = async (
   pasteSiteLink: string,
   selector: string,
   attribute?: string,
 ) => {
   return await onions.scrapWebsite(pasteSiteLink, selector, attribute);
+};
+export const savePastesToDB = async (pastes: IPaste[]) => {
+  const source = pastes[0]?.source;
+  const doesExist = await Pastes.findOne({ source: source });
+  if (doesExist) {
+    try {
+      await Pastes.updateOne({
+        source: source,
+        $addToSet: { pastes: { $each: pastes } },
+      });
+      return 'OK';
+    } catch ({ message }) {
+      console.log(
+        'Error with savePastesToDB() at pastes.util.ts at ~line 25, ',
+        message,
+      );
+      return 'ERROR';
+    }
+  } else {
+    try {
+      const newPaste = new Pastes({
+        source: pastes[0]?.source,
+        pastes: pastes,
+      });
+      await newPaste.save();
+      return 'OK';
+    } catch ({ message }) {
+      console.log(
+        'Error with savePastesToDB() at pastes.util.ts at ~line 25, ',
+        message,
+      );
+      return 'ERROR';
+    }
+  }
 };

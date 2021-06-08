@@ -1,13 +1,12 @@
 import { Router, Response, Request } from 'express';
-import { ParseInnerText } from '../../utils';
+import { ParseAndSaveStrongholdData, strongholdUrls } from '../../utils';
 import * as onions from '../../utils/onion.util';
 import * as pastes from '../../utils/pastes.util';
 
 require('dotenv').config();
-
 const onionRouter = Router();
 onionRouter.get('/deeppaste', async (req: Request, res: Response) => {
-  const scrapedData = await pastes.SortPastes(
+  const scrapedData = await pastes.getPastes(
     'http://paste6kr6ttc5chv.onion/top.php',
     'body',
     'innerText',
@@ -15,24 +14,20 @@ onionRouter.get('/deeppaste', async (req: Request, res: Response) => {
   res.status(200).send(scrapedData);
 });
 onionRouter.get('/stronghold', async (req: Request, res: Response) => {
-  const strongholdUrls = [
-    'http://nzxj65x32vh2fkhk.onion/all',
-    'http://nzxj65x32vh2fkhk.onion/all?page=2',
-    'http://nzxj65x32vh2fkhk.onion/all?page=3',
-  ];
   const scrapedData = await Promise.all(
     strongholdUrls.map(async (url: string) => {
-      const data = await pastes.SortPastesWithoutLinks(
+      const data = await pastes.getPastesWithoutLinks(
         url,
         'div.row',
         'innerText',
       );
       try {
-        return data.map((paste: string) => {
-          if (paste.split(' ').length > 2) {
-            return ParseInnerText(paste);
-          }
-        });
+        const { parsed, status } = await ParseAndSaveStrongholdData(data);
+        if (status !== 'OK')
+          console.log(
+            'There was an error saving the data!! New data was not saved to DB.',
+          );
+        return parsed;
       } catch ({ message }) {
         console.log(message);
         return data;
@@ -66,7 +61,6 @@ onionRouter.post('/url', async (req: Request, res: Response) => {
     });
   }
 });
-
 onionRouter.post('/scrape', async (req: Request, res: Response) => {
   const { url, selector, attribute, options } = req.body;
   try {
@@ -79,9 +73,6 @@ onionRouter.post('/scrape', async (req: Request, res: Response) => {
     });
   }
 });
-// onions.scrapWebsite('http://nzxj65x32vh2fkhk.onion/all', 'div');
 onionRouter.post('/delete', (req: Request, res: Response) => {});
-
 onionRouter.post('/update', (req: Request, res: Response) => {});
-
 export default onionRouter;
