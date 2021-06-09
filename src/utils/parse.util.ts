@@ -8,6 +8,7 @@ export const strongholdUrls = [
 const rules = {
   ignore: ['preview', 'Show paste', ''],
 };
+
 export const ParseAndSaveStrongholdData = async (data: any) => {
   const parsed = data
     .map((paste: string) => {

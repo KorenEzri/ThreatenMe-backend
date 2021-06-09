@@ -1,7 +1,21 @@
 import * as onions from '../utils/onion.util';
 import { IPaste } from '../../types';
-import { Pastes } from '../db/schemas';
+import { Paste } from '../db/schemas';
+import { pasteSchema } from '../validations';
 
+export const generateHash = (title: string, body: string): string => {
+  const wordToHash = title + body;
+  let hash = 0,
+    i,
+    chr;
+  if (wordToHash.length === 0) return `${hash}`;
+  for (i = 0; i < wordToHash.length; i++) {
+    chr = wordToHash.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0;
+  }
+  return `${hash}`;
+};
 export const getPastes = async (
   pasteSiteLink: string,
   selector: string,
@@ -22,37 +36,29 @@ export const getPastesWithoutLinks = async (
 ) => {
   return await onions.scrapWebsite(pasteSiteLink, selector, attribute);
 };
+
+const validateAndGenerateHashfromPastes = (pastes: IPaste[]): IPaste[] => {
+  const formattedPastes = [];
+  for (let i = 0; i < pastes.length; i++) {
+    const currentPaste = pastes[i];
+    const isValid = pasteSchema.validate(currentPaste);
+    if (!isValid) continue;
+    const { title, body } = currentPaste;
+    const formattedPaste = {
+      ...currentPaste,
+      uniqueIdentifier: generateHash(title, body),
+    };
+    formattedPastes.push(formattedPaste);
+  }
+  return formattedPastes;
+};
 export const savePastesToDB = async (pastes: IPaste[]) => {
-  const source = pastes[0]?.source;
-  const doesExist = await Pastes.findOne({ source: source });
-  if (doesExist) {
-    try {
-      await Pastes.updateOne({
-        source: source,
-        $addToSet: { pastes: { $each: pastes } },
-      });
-      return 'OK';
-    } catch ({ message }) {
-      console.log(
-        'Error with savePastesToDB() at pastes.util.ts at ~line 25, ',
-        message,
-      );
-      return 'ERROR';
-    }
-  } else {
-    try {
-      const newPaste = new Pastes({
-        source: pastes[0]?.source,
-        pastes: pastes,
-      });
-      await newPaste.save();
-      return 'OK';
-    } catch ({ message }) {
-      console.log(
-        'Error with savePastesToDB() at pastes.util.ts at ~line 25, ',
-        message,
-      );
-      return 'ERROR';
-    }
+  const formattedPastes = validateAndGenerateHashfromPastes(pastes);
+  try {
+    await Paste.insertMany(formattedPastes, { ordered: false });
+    return 'OK';
+  } catch ({ message }) {
+    console.log(message);
+    return 'ERROR';
   }
 };

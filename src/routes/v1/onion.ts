@@ -1,63 +1,57 @@
+import Logger from '../../../src/logger/logger';
 import { Router, Response, Request } from 'express';
-import { ParseAndSaveStrongholdData, strongholdUrls } from '../../utils';
+import { savePastesToDB } from '../../utils';
 import * as onions from '../../utils/onion.util';
-import * as pastes from '../../utils/pastes.util';
 
 require('dotenv').config();
 const onionRouter = Router();
-onionRouter.get('/deeppaste', async (req: Request, res: Response) => {
-  const scrapedData = await pastes.getPastes(
-    'http://paste6kr6ttc5chv.onion/top.php',
-    'body',
-    'innerText',
-  );
-  res.status(200).send(scrapedData);
+onionRouter.post('/deeppaste', async (req: Request, res: Response) => {
+  const scrapes = req.body;
+  try {
+    Logger.info(
+      `Received parsed unchecked paste data, length: ${scrapes.length}`,
+    );
+    await savePastesToDB(scrapes);
+    res.status(200).send('OK');
+  } catch (err) {
+    Logger.error(err);
+    res.status(500).send('Internal server error.');
+  }
 });
-onionRouter.get('/stronghold', async (req: Request, res: Response) => {
-  const scrapedData = await Promise.all(
-    strongholdUrls.map(async (url: string) => {
-      const data = await pastes.getPastesWithoutLinks(
-        url,
-        'div.row',
-        'innerText',
-      );
-      try {
-        const { parsed, status } = await ParseAndSaveStrongholdData(data);
-        if (status !== 'OK')
-          console.log(
-            'There was an error saving the data!! New data was not saved to DB.',
-          );
-        return parsed;
-      } catch ({ message }) {
-        console.log(message);
-        return data;
-      }
-    }),
-  );
-  res.status(200).send(scrapedData);
+onionRouter.post('/stronghold', async (req: Request, res: Response) => {
+  const scrapes = req.body;
+  try {
+    Logger.info(
+      `Received parsed unchecked paste data, length: ${scrapes.length}`,
+    );
+    await savePastesToDB(scrapes);
+    res.status(200).send('OK');
+  } catch (err) {
+    Logger.error(err);
+    res.status(500).send('Internal server error.');
+  }
 });
 onionRouter.get('/allurls', async (req: Request, res: Response) => {
   try {
     const { data } = await onions.getUrls();
     data ? res.status(200).send(data) : res.status(404).send('Data not found.');
-  } catch ({ message }) {
-    console.log(message);
+  } catch (err) {
+    Logger.error(err);
     res.status(500).json({
-      message: `There was an error processing the request, ${message}`,
+      message: `There was an error processing the request, ${err.message}`,
     });
   }
 });
 onionRouter.post('/url', async (req: Request, res: Response) => {
-  console.log(req.body);
   const { url } = req.body;
   const fullUrl = 'http://' + url;
   try {
     const urlsFromSource = await onions.getUrls(fullUrl);
     if (urlsFromSource) res.status(200).send(urlsFromSource);
-  } catch ({ message }) {
-    console.log(message);
+  } catch (err) {
+    Logger.error(err);
     res.status(500).json({
-      message: `There was an error processing the request, ${message}`,
+      message: `There was an error processing the request, ${err.message}`,
     });
   }
 });
@@ -66,10 +60,10 @@ onionRouter.post('/scrape', async (req: Request, res: Response) => {
   try {
     const response = await onions.scrapWebsite(url, selector, attribute);
     if (response) res.status(200).send(response);
-  } catch ({ message }) {
-    console.log(message);
+  } catch (err) {
+    Logger.error(err);
     res.status(500).json({
-      message: `There was an error processing the request, ${message}`,
+      message: `There was an error processing the request, ${err.message}`,
     });
   }
 });

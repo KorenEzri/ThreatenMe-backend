@@ -1,2 +1,2 @@
 export * from './onion';
-export * from './pastes';
+export * from './paste';
