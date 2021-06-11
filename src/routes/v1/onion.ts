@@ -56,16 +56,18 @@ onionRouter.post('/url', async (req: Request, res: Response) => {
   }
 });
 onionRouter.post('/scrape', async (req: Request, res: Response) => {
-  const { url, selector, attribute, options } = req.body;
-  try {
-    const response = await onions.scrapWebsite(url, selector, attribute);
-    if (response) res.status(200).send(response);
-  } catch (err) {
-    Logger.error(err);
-    res.status(500).json({
-      message: `There was an error processing the request, ${err.message}`,
-    });
-  }
+  const { options } = req.body;
+  res.status(200).send('OK');
+  return;
+  // try {
+  //   const response = await onions.scrapWebsite(url, selector, attribute);
+  //   if (response) res.status(200).send(response);
+  // } catch (err) {
+  //   Logger.error(err);
+  //   res.status(500).json({
+  //     message: `There was an error processing the request, ${err.message}`,
+  //   });
+  // }
 });
 onionRouter.post('/delete', (req: Request, res: Response) => {});
 onionRouter.post('/update', (req: Request, res: Response) => {});
