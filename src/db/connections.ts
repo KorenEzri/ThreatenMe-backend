@@ -5,15 +5,15 @@ import Logger from '../logger/logger';
 dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI || '';
-export const connectToDb = () =>
-  mongoose.connect(
-    MONGO_URI,
-    {
-      useCreateIndex: true,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    },
-    () => {
-      Logger.info('connected to database');
-    },
-  );
+export const connectToDb = () => console.log('URI: ', MONGO_URI);
+mongoose.connect(
+  MONGO_URI,
+  {
+    useCreateIndex: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  },
+  () => {
+    Logger.info('connected to database');
+  },
+);
